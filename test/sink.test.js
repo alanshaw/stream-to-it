@@ -127,3 +127,27 @@ test('should throw mid stream', async t => {
 
   t.is(err.message, 'boom')
 })
+
+test('should destroy writable stream if source throws', async t => {
+  const input = Array.from(Array(randomInt(5, 10)), () => randomBytes(1, 512))
+  const output = []
+
+  const source = {
+    [Symbol.iterator]: function * () {
+      yield * input[Symbol.iterator]()
+      throw new Error('boom')
+    }
+  }
+
+  const stream = new Writable({
+    write (chunk, enc, cb) {
+      output.push(chunk)
+      cb()
+    }
+  })
+
+  const err = await t.throwsAsync(pipe(source, toIterable.sink(stream)))
+
+  t.is(err.message, 'boom')
+  t.true(stream.destroyed)
+})

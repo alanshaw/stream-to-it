@@ -30,6 +30,15 @@ module.exports = writable => async source => {
     .on('finish', finishHandler)
     .on('drain', drainHandler)
 
+  const getNext = async () => {
+    try {
+      return source.next()
+    } catch (err) {
+      writable.destroy(err)
+      return errPromise.promise
+    }
+  }
+
   try {
     while (true) {
       // Race the iterator and the error, close and finish listener
@@ -38,7 +47,7 @@ module.exports = writable => async source => {
         closePromise.promise,
         endingPromise.promise,
         finishPromise.promise,
-        source.next()
+        getNext()
       ])
 
       if (result.closed || result.finished) {
