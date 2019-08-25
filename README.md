@@ -86,6 +86,11 @@ Convert a [`Transform`](https://nodejs.org/dist/latest/docs/api/stream.html#stre
 
 Convert a [`Duplex`](https://nodejs.org/dist/latest/docs/api/stream.html#stream_duplex_and_transform_streams) stream to a [duplex](https://gist.github.com/alanshaw/591dc7dd54e4f99338a347ef568d6ee9#duplex-it) iterable.
 
+## Related
+
+* [`it-to-stream`](https://www.npmjs.com/package/it-to-stream) Convert streaming iterables to Node.js streams
+* [`it-pipe`](https://www.npmjs.com/package/it-pipe) Utility to "pipe" async iterables together
+
 ## Contribute
 
 Feel free to dive in! [Open an issue](https://github.com/alanshaw/stream-to-it/issues/new) or submit PRs.
