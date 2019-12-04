@@ -30,6 +30,16 @@ for await (const chunk of source) {
 }
 ```
 
+Also works with browser [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream):
+
+```js
+const res = fetch('http://example.org/file.jpg')
+
+for await (const chunk of toIterable.source(res.body)) {
+  console.log(chunk.toString())
+}
+```
+
 ### Convert writable stream to sink iterable
 
 ```js
