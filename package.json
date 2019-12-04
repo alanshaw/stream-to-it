@@ -23,11 +23,11 @@
   },
   "devDependencies": {
     "ava": "^2.2.0",
-    "bl": "^3.0.0",
+    "bl": "^4.0.0",
     "it-pipe": "^1.0.1",
     "nyc": "^14.1.1",
     "p-fifo": "^1.0.0",
-    "standard": "^13.1.0",
+    "standard": "^14.3.1",
     "streaming-iterables": "^4.1.0"
   },
   "ava": {
