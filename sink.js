@@ -20,7 +20,6 @@ module.exports = writable => async source => {
   let closed = false
   const closeHandler = () => {
     closed = true
-    endSource(source)
     if (closeCb) closeCb()
   }
 
@@ -45,6 +44,8 @@ module.exports = writable => async source => {
   }
 
   const waitForDone = () => {
+    // Immediately end the source
+    endSource(source)
     return new Promise((resolve, reject) => {
       if (closed || finished) return resolve()
       finishCb = closeCb = resolve
