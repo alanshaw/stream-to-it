@@ -22,17 +22,13 @@
     "p-defer": "^3.0.0"
   },
   "devDependencies": {
-    "ava": "^2.2.0",
+    "ava": "^3.10.1",
     "bl": "^4.0.0",
-    "it-pipe": "^1.0.1",
-    "nyc": "^14.1.1",
+    "it-pipe": "^1.1.0",
+    "nyc": "^15.1.0",
     "p-fifo": "^1.0.0",
     "standard": "^14.3.1",
-    "streaming-iterables": "^4.1.0"
-  },
-  "ava": {
-    "babel": false,
-    "compileEnhancements": false
+    "streaming-iterables": "^5.0.2"
   },
   "directories": {
     "test": "test"
