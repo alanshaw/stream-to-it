@@ -11,7 +11,7 @@ module.exports = writable => async source => {
   let errCb = null
   const errorHandler = (err) => {
     error = err
-    if (errCb) errCb()
+    if (errCb) errCb(err)
     // When the writable errors, end the source to exit iteration early
     endSource(source)
   }
@@ -20,6 +20,7 @@ module.exports = writable => async source => {
   let closed = false
   const closeHandler = () => {
     closed = true
+    endSource(source)
     if (closeCb) closeCb()
   }
 
@@ -35,9 +36,9 @@ module.exports = writable => async source => {
     if (drainCb) drainCb()
   }
 
-  const waitForDrain = () => {
+  const waitForDrainOrClose = () => {
     return new Promise((resolve, reject) => {
-      drainCb = resolve
+      closeCb = drainCb = resolve
       errCb = reject
       writable.once('drain', drainHandler)
     })
@@ -67,7 +68,7 @@ module.exports = writable => async source => {
       if (!writable.writable || writable.destroyed) break
 
       if (writable.write(value) === false) {
-        await waitForDrain()
+        await waitForDrainOrClose()
       }
     }
   } catch (err) {
@@ -78,7 +79,6 @@ module.exports = writable => async source => {
   // Everything is good and we're done writing, end everything
   if (!error && writable.writable) {
     writable.end()
-    endSource(source)
   }
 
   // Wait until we close or finish. This supports halfClosed streams
