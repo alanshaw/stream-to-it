@@ -3,6 +3,12 @@
   "version": "0.2.0",
   "description": "Convert Node.js streams to streaming iterables",
   "main": "index.js",
+  "files": [
+    "duplex.js",
+    "sink.js",
+    "source.js",
+    "transport.js"
+  ],
   "scripts": {
     "test": "ava test/*.test.js --verbose",
     "lint": "standard",
