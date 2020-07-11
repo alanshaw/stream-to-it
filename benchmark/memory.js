@@ -14,7 +14,7 @@ const os = require('os')
 const toIterable = require('../')
 const pipe = require('it-pipe')
 
-async function* run() {
+async function * run () {
   for (let i = 0; i < 170000; i++) {
     yield Buffer.alloc(4096)
   }

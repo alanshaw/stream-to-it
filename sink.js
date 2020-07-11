@@ -1,112 +1,92 @@
 const getIterator = require('get-iterator')
-const defer = require('p-defer')
 
 module.exports = writable => async source => {
   source = getIterator(source)
 
-  const errPromise = defer()
-  const closePromise = defer()
-  const endingPromise = defer()
-  const finishPromise = defer()
-  let drainPromise
+  const endSource = (source) => {
+    if (typeof source.return === 'function') source.return()
+  }
 
-  const errorHandler = err => errPromise.reject(err)
-  const closeHandler = () => closePromise.resolve({ closed: true })
-  const finishHandler = () => finishPromise.resolve({ finished: true })
+  let error = null
+  let errCb = null
+  const errorHandler = (err) => {
+    error = err
+    if (errCb) errCb()
+    // When the writable errors, end the source to exit iteration early
+    endSource(source)
+  }
+
+  let closeCb = null
+  let closed = false
+  const closeHandler = () => {
+    closed = true
+    if (closeCb) closeCb()
+  }
+
+  let finishCb = null
+  let finished = false
+  const finishHandler = () => {
+    finished = true
+    if (finishCb) finishCb()
+  }
+
+  let drainCb = null
   const drainHandler = () => {
-    if (drainPromise) drainPromise.resolve({ drained: true })
+    if (drainCb) drainCb()
   }
 
-  // There's no event to determine the start of a call to .end()
-  const _end = writable.end.bind(writable)
-  writable.end = (...args) => {
-    endingPromise.resolve({ ending: true })
-    return _end(...args)
+  const waitForDrain = () => {
+    return new Promise((resolve, reject) => {
+      drainCb = resolve
+      errCb = reject
+      writable.once('drain', drainHandler)
+    })
   }
 
-  writable
-    .on('error', errorHandler)
-    .on('close', closeHandler)
-    .on('finish', finishHandler)
-    .on('drain', drainHandler)
-
-  const getNext = async () => {
-    try {
-      return source.next()
-    } catch (err) {
-      writable.destroy(err)
-      return errPromise.promise
-    }
+  const waitForDone = () => {
+    return new Promise((resolve, reject) => {
+      if (closed || finished) return resolve()
+      finishCb = closeCb = resolve
+      errCb = reject
+    })
   }
+
+  const cleanup = () => {
+    writable.removeListener('error', errorHandler)
+    writable.removeListener('close', closeHandler)
+    writable.removeListener('finish', finishHandler)
+    writable.removeListener('drain', drainHandler)
+  }
+
+  writable.once('error', errorHandler)
+  writable.once('close', closeHandler)
+  writable.once('finish', finishHandler)
 
   try {
-    while (true) {
-      // Race the iterator and the error, close and finish listener
-      const result = await Promise.race([
-        errPromise.promise,
-        closePromise.promise,
-        endingPromise.promise,
-        finishPromise.promise,
-        getNext()
-      ])
+    for await (const value of source) {
+      if (!writable.writable || writable.destroyed) break
 
-      if (result.closed || result.finished) {
-        break
-      }
-
-      // .end() was called, waiting on flush (finish event)
-      if (result.ending) {
-        await Promise.race([
-          errPromise.promise,
-          // TODO: do we need to wait on close? If slow end and destroy is
-          // called then what is emitted? close or finish?
-          closePromise.promise,
-          finishPromise.promise
-        ])
-        break
-      }
-
-      // If destroyed, race err & close to determine reason & then throw/break
-      if (writable.destroyed) {
-        await Promise.race([
-          errPromise.promise,
-          closePromise.promise
-        ])
-        break
-      }
-
-      if (result.done) {
-        writable.end()
-        await Promise.race([
-          errPromise.promise,
-          // TODO: do we need to wait on close? If slow end and destroy is
-          // called then what is emitted? close or finish?
-          closePromise.promise,
-          finishPromise.promise
-        ])
-        break
-      }
-
-      if (!writable.write(result.value)) {
-        drainPromise = defer()
-        await Promise.race([
-          errPromise.promise,
-          closePromise.promise,
-          finishPromise.promise,
-          drainPromise.promise
-        ])
+      if (writable.write(value) === false) {
+        await waitForDrain()
       }
     }
-  } finally {
-    writable
-      .removeListener('error', errorHandler)
-      .removeListener('close', closeHandler)
-      .removeListener('finish', finishHandler)
-      .removeListener('drain', drainHandler)
-
-    // End the iterator if it is a generator
-    if (typeof source.return === 'function') {
-      await source.return()
-    }
+  } catch (err) {
+    // The writable did not error, give it the error
+    writable.destroy(err)
   }
+
+  // Everything is good and we're done writing, end everything
+  if (!error && writable.writable) {
+    writable.end()
+    endSource(source)
+  }
+
+  // Wait until we close or finish. This supports halfClosed streams
+  await waitForDone()
+
+  // Clean up listeners
+  cleanup()
+
+  // Notify the user an error occurred
+  if (error) throw error
 }
