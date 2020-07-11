@@ -7,7 +7,7 @@
     "duplex.js",
     "sink.js",
     "source.js",
-    "transport.js"
+    "transform.js"
   ],
   "scripts": {
     "test": "ava test/*.test.js --verbose",
