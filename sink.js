@@ -77,16 +77,18 @@ module.exports = writable => async source => {
     writable.destroy(err)
   }
 
-  // Everything is good and we're done writing, end everything
-  if (!error && writable.writable) {
-    writable.end()
+  try {
+    // Everything is good and we're done writing, end everything
+    if (!error && writable.writable) {
+      writable.end()
+    }
+
+    // Wait until we close or finish. This supports halfClosed streams
+    await waitForDone()
+  } finally {
+    // Clean up listeners
+    cleanup()
   }
-
-  // Wait until we close or finish. This supports halfClosed streams
-  await waitForDone()
-
-  // Clean up listeners
-  cleanup()
 
   // Notify the user an error occurred
   if (error) throw error
