@@ -47,7 +47,7 @@ module.exports = writable => async source => {
     // Immediately try to end the source
     maybeEndSource(source)
     return new Promise((resolve, reject) => {
-      if (closed || finished) return resolve()
+      if (closed || finished || error) return resolve()
       finishCb = closeCb = resolve
       errCb = reject
     })

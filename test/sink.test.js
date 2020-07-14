@@ -65,6 +65,7 @@ test('should end mid stream', async t => {
   const output = []
 
   const stream = new Writable({
+    autoDestroy: false,
     write (chunk, enc, cb) {
       output.push(chunk)
       cb()
@@ -87,6 +88,7 @@ test('should destroy mid stream', async t => {
   const output = []
 
   const stream = new Writable({
+    autoDestroy: false,
     write (chunk, enc, cb) {
       output.push(chunk)
       cb()
@@ -129,6 +131,7 @@ test('should throw mid stream', async t => {
   const output = []
 
   const stream = new Writable({
+    autoDestroy: false,
     write (chunk, enc, cb) {
       output.push(chunk)
       cb()
@@ -152,6 +155,7 @@ test('should make stream unwritable when write callback is passed an error immed
   const input = Array.from(Array(randomInt(5, 10)), () => randomBytes(1, 512))
 
   const stream = new Writable({
+    autoDestroy: false,
     write (chunk, enc, cb) {
       cb(new Error('boom'))
     }
@@ -173,6 +177,7 @@ test('should make stream unwritable when write callback is passed an error after
   const input = Array.from(Array(randomInt(5, 10)), () => randomBytes(1, 512))
 
   const stream = new Writable({
+    autoDestroy: false,
     write (chunk, enc, cb) {
       setImmediate(() => {
         cb(new Error('boom'))
@@ -196,6 +201,7 @@ test('should make stream unwritable when write causes an error', async t => {
   const input = Array.from(Array(randomInt(5, 10)), () => randomBytes(1, 512))
 
   const stream = new Writable({
+    autoDestroy: false,
     write (chunk, enc, cb) {
       stream.emit('error', new Error('boom'))
       setImmediate(() => cb())
@@ -230,6 +236,7 @@ test('should make stream unwritable when write causes an error and source has no
   }
 
   const stream = new Writable({
+    autoDestroy: false,
     write (chunk, enc, cb) {
       stream.emit('error', new Error('boom'))
       setImmediate(() => cb())
@@ -264,6 +271,7 @@ test('should make stream unwritable when stream refuses new data and emits an er
   }
 
   const stream = new Writable({
+    autoDestroy: false,
     highWaterMark: 0, // cause sink to wait for drain event
     write (chunk, enc, cb) {
       setImmediate(() => cb(new Error('boom')))
@@ -294,6 +302,7 @@ test('should destroy writable stream if source throws', async t => {
   }
 
   const stream = new Writable({
+    autoDestroy: false,
     write (chunk, enc, cb) {
       output.push(chunk)
       cb()
@@ -319,6 +328,7 @@ test('stream should not error if source throws', async t => {
   }
 
   const stream = new Writable({
+    autoDestroy: false,
     write (chunk, enc, cb) {
       cb()
     }
