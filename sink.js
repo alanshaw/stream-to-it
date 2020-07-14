@@ -7,11 +7,10 @@ module.exports = writable => async source => {
     if (typeof source.return === 'function') source.return()
   }
 
-  let streamError = null
-  let sourceError = null
+  let error = null
   let errCb = null
   const errorHandler = (err) => {
-    streamError = err
+    error = err
     if (errCb) errCb(err)
     // When the writable errors, end the source to exit iteration early
     endSource(source)
@@ -69,28 +68,13 @@ module.exports = writable => async source => {
     for await (const value of source) {
       if (!writable.writable || writable.destroyed) break
 
-      let writeMore = false
-
-      try {
-        // if write throws, no error event will occur
-        writeMore = writable.write(value)
-      } catch (err) {
-        streamError = err
-        throw err
-      }
-
-      if (writeMore === false) {
+      if (writable.write(value) === false) {
         await waitForDrainOrClose()
       }
     }
   } catch (err) {
     writable.destroy()
-
-    // waitForDrainOrClose can throw with an error from the stream
-    // which would have been set as streamError by errorHandler
-    if (err !== streamError) {
-      sourceError = err
-    }
+    error = err
   }
 
   try {
@@ -103,8 +87,7 @@ module.exports = writable => async source => {
     await waitForDone()
 
     // Notify the user an error occurred
-    if (sourceError) throw sourceError
-    if (streamError) throw streamError
+    if (error) throw error
   } finally {
     // Clean up listeners
     cleanup()
