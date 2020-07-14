@@ -72,12 +72,7 @@ module.exports = writable => async source => {
         await waitForDrainOrClose()
       }
     }
-  } catch (err) {
-    // The writable did not error, give it the error
-    writable.destroy(err)
-  }
 
-  try {
     // Everything is good and we're done writing, end everything
     if (!error && writable.writable) {
       writable.end()
@@ -85,6 +80,13 @@ module.exports = writable => async source => {
 
     // Wait until we close or finish. This supports halfClosed streams
     await waitForDone()
+  } catch (err) {
+    // the source threw, destroy the stream and throw the error
+    // call end too as we want it to be marked `writable: false`
+    writable.end()
+    writable.destroy()
+
+    throw err
   } finally {
     // Clean up listeners
     cleanup()

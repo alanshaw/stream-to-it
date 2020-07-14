@@ -149,5 +149,6 @@ test('should destroy writable stream if source throws', async t => {
   const err = await t.throwsAsync(pipe(source, toIterable.sink(stream)))
 
   t.is(err.message, 'boom')
+  t.false(stream.writable)
   t.true(stream.destroyed)
 })
