@@ -184,7 +184,6 @@ test('should destroy writable stream if source throws', async t => {
   t.is(err.message, 'boom')
   t.false(stream.writable)
   t.true(stream.destroyed)
-  t.false(stream.writable)
 })
 
 test('stream should not error if source throws', async t => {
