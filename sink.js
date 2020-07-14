@@ -7,10 +7,11 @@ module.exports = writable => async source => {
     if (typeof source.return === 'function') source.return()
   }
 
-  let error = null
+  let streamError = null
+  let sourceError = null
   let errCb = null
   const errorHandler = (err) => {
-    error = err
+    streamError = err
     if (errCb) errCb(err)
     // When the writable errors, end the source to exit iteration early
     endSource(source)
@@ -68,30 +69,44 @@ module.exports = writable => async source => {
     for await (const value of source) {
       if (!writable.writable || writable.destroyed) break
 
-      if (writable.write(value) === false) {
+      let writeMore = false
+
+      try {
+        // if write throws, no error event will occur
+        writeMore = writable.write(value)
+      } catch (err) {
+        streamError = err
+        throw err
+      }
+
+      if (writeMore === false) {
         await waitForDrainOrClose()
       }
     }
+  } catch (err) {
+    writable.destroy()
 
-    // Everything is good and we're done writing, end everything
-    if (!error && writable.writable) {
+    // waitForDrainOrClose can throw with an error from the stream
+    // which would have been set as streamError by errorHandler
+    if (err !== streamError) {
+      sourceError = err
+    }
+  }
+
+  try {
+    // We're done writing, end everything (n.b. stream may be destroyed at this point)
+    if (writable.writable) {
       writable.end()
     }
 
     // Wait until we close or finish. This supports halfClosed streams
     await waitForDone()
-  } catch (err) {
-    // the source threw, destroy the stream and throw the error
-    // call end too as we want it to be marked `writable: false`
-    writable.end()
-    writable.destroy()
 
-    throw err
+    // Notify the user an error occurred
+    if (sourceError) throw sourceError
+    if (streamError) throw streamError
   } finally {
     // Clean up listeners
     cleanup()
   }
-
-  // Notify the user an error occurred
-  if (error) throw error
 }
