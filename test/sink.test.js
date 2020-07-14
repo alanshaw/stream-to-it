@@ -4,6 +4,14 @@ const toIterable = require('../')
 const pipe = require('it-pipe')
 const { randomInt, randomBytes } = require('./helpers/random')
 
+const delay = require('delay')
+const slowIterator = async function * (values) {
+  for (const value of values) {
+    await delay(1)
+    yield value
+  }
+}
+
 test('should convert to sink iterable', async t => {
   const input = Array.from(Array(randomInt(5, 10)), () => randomBytes(1, 512))
   const output = []
@@ -140,7 +148,7 @@ test('should throw mid stream', async t => {
   t.false(stream.writable)
 })
 
-test('should destroy stream when write callback is passed an error', async t => {
+test('should make stream unwritable when write callback is passed an error immediately', async t => {
   const input = Array.from(Array(randomInt(5, 10)), () => randomBytes(1, 512))
 
   const stream = new Writable({
@@ -157,8 +165,121 @@ test('should destroy stream when write callback is passed an error', async t => 
   )
 
   t.is(err.message, 'boom')
-  t.true(stream.destroyed)
   t.false(stream.writable)
+  t.false(stream.destroyed)
+})
+
+test('should make stream unwritable when write callback is passed an error after a delay', async t => {
+  const input = Array.from(Array(randomInt(5, 10)), () => randomBytes(1, 512))
+
+  const stream = new Writable({
+    write (chunk, enc, cb) {
+      setImmediate(() => {
+        cb(new Error('boom'))
+      })
+    }
+  })
+
+  const err = await t.throwsAsync(
+    pipe(
+      slowIterator(input),
+      toIterable.sink(stream)
+    )
+  )
+
+  t.is(err.message, 'boom')
+  t.false(stream.writable)
+  t.false(stream.destroyed)
+})
+
+test('should make stream unwritable when write causes an error', async t => {
+  const input = Array.from(Array(randomInt(5, 10)), () => randomBytes(1, 512))
+
+  const stream = new Writable({
+    write (chunk, enc, cb) {
+      stream.emit('error', new Error('boom'))
+      setImmediate(() => cb())
+    }
+  })
+
+  const err = await t.throwsAsync(
+    pipe(
+      slowIterator(input),
+      toIterable.sink(stream)
+    )
+  )
+
+  t.is(err.message, 'boom')
+  t.false(stream.writable)
+  t.false(stream.destroyed)
+})
+
+test('should make stream unwritable when write causes an error and source has no return method', async t => {
+  const input = Array.from(Array(randomInt(5, 10)), () => randomBytes(1, 512))
+
+  const source = {
+    [Symbol.asyncIterator]: function () {
+      return this
+    },
+    next: () => {
+      return {
+        value: input.pop(),
+        done: !input.length
+      }
+    }
+  }
+
+  const stream = new Writable({
+    write (chunk, enc, cb) {
+      stream.emit('error', new Error('boom'))
+      setImmediate(() => cb())
+    }
+  })
+
+  const err = await t.throwsAsync(
+    pipe(
+      source,
+      toIterable.sink(stream)
+    )
+  )
+
+  t.is(err.message, 'boom')
+  t.false(stream.writable)
+  t.false(stream.destroyed)
+})
+
+test('should make stream unwritable when stream refuses new data and emits an error', async t => {
+  const input = Array.from(Array(randomInt(5, 10)), () => randomBytes(1, 512))
+
+  const source = {
+    [Symbol.asyncIterator]: function () {
+      return this
+    },
+    next: () => {
+      return {
+        value: input.pop(),
+        done: !input.length
+      }
+    }
+  }
+
+  const stream = new Writable({
+    highWaterMark: 0, // cause sink to wait for drain event
+    write (chunk, enc, cb) {
+      setImmediate(() => cb(new Error('boom')))
+    }
+  })
+
+  const err = await t.throwsAsync(
+    pipe(
+      source,
+      toIterable.sink(stream)
+    )
+  )
+
+  t.is(err.message, 'boom')
+  t.false(stream.writable)
+  t.false(stream.destroyed)
 })
 
 test('should destroy writable stream if source throws', async t => {
