@@ -3,7 +3,7 @@ const getIterator = require('get-iterator')
 module.exports = writable => async source => {
   source = getIterator(source)
 
-  const endSource = (source) => {
+  const maybeEndSource = (source) => {
     if (typeof source.return === 'function') source.return()
   }
 
@@ -12,8 +12,8 @@ module.exports = writable => async source => {
   const errorHandler = (err) => {
     error = err
     if (errCb) errCb(err)
-    // When the writable errors, end the source to exit iteration early
-    endSource(source)
+    // When the writable errors, try to end the source to exit iteration early
+    maybeEndSource(source)
   }
 
   let closeCb = null
@@ -44,10 +44,10 @@ module.exports = writable => async source => {
   }
 
   const waitForDone = () => {
-    // Immediately end the source
-    endSource(source)
+    // Immediately try to end the source
+    maybeEndSource(source)
     return new Promise((resolve, reject) => {
-      if (closed || finished) return resolve()
+      if (closed || finished || error) return resolve()
       finishCb = closeCb = resolve
       errCb = reject
     })
@@ -66,30 +66,35 @@ module.exports = writable => async source => {
 
   try {
     for await (const value of source) {
-      if (!writable.writable || writable.destroyed) break
+      if (!writable.writable || writable.destroyed || error) break
 
       if (writable.write(value) === false) {
         await waitForDrainOrClose()
       }
     }
   } catch (err) {
-    // The writable did not error, give it the error
-    writable.destroy(err)
+    // error is set by stream error handler so only destroy stream if source threw
+    if (!error) {
+      writable.destroy()
+    }
+
+    // could we be obscuring an error here?
+    error = err
   }
 
   try {
-    // Everything is good and we're done writing, end everything
-    if (!error && writable.writable) {
+    // We're done writing, end everything (n.b. stream may be destroyed at this point but then this is a no-op)
+    if (writable.writable) {
       writable.end()
     }
 
     // Wait until we close or finish. This supports halfClosed streams
     await waitForDone()
+
+    // Notify the user an error occurred
+    if (error) throw error
   } finally {
     // Clean up listeners
     cleanup()
   }
-
-  // Notify the user an error occurred
-  if (error) throw error
 }
