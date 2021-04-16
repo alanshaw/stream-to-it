@@ -28,12 +28,12 @@
   },
   "devDependencies": {
     "ava": "^3.10.1",
-    "bl": "^4.0.0",
-    "delay": "^4.3.0",
+    "bl": "^5.0.0",
+    "delay": "^5.0.0",
     "it-pipe": "^1.1.0",
     "nyc": "^15.1.0",
     "p-fifo": "^1.0.0",
-    "standard": "^14.3.1",
+    "standard": "^16.0.3",
     "streaming-iterables": "^5.0.2"
   },
   "directories": {
