@@ -88,3 +88,28 @@ test('should error the iterator when transform stream errors', async t => {
 
   t.is(err.message, 'boom')
 })
+
+test('should destroy transform stream and pass through errors from source', async t => {
+  async function * input () {
+    yield 'hello,'
+    yield 'world,'
+    throw new Error('test error')
+  }
+
+  const transformStream = new Transform({
+    transform (chunk, enc, cb) {
+      cb(null, chunk)
+    }
+  })
+
+  const err = await t.throwsAsync(
+    pipe(
+      input,
+      toIterable.transform(transformStream),
+      collect
+    )
+  )
+
+  t.is(err.message, 'test error')
+  t.is(transformStream.destroyed, true)
+})
