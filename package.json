@@ -1,6 +1,6 @@
 {
   "name": "stream-to-it",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Convert Node.js streams to streaming iterables",
   "main": "index.js",
   "files": [
