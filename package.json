@@ -34,7 +34,7 @@
     "nyc": "^15.1.0",
     "p-fifo": "^1.0.0",
     "standard": "^16.0.3",
-    "streaming-iterables": "^5.0.2"
+    "streaming-iterables": "^6.0.0"
   },
   "directories": {
     "test": "test"
