@@ -27,7 +27,7 @@
     "get-iterator": "^1.0.2"
   },
   "devDependencies": {
-    "ava": "^3.10.1",
+    "ava": "^5.2.0",
     "bl": "^5.0.0",
     "delay": "^5.0.0",
     "it-pipe": "^1.1.0",
