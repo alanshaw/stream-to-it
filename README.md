@@ -27,9 +27,12 @@ Seamlessly use Node.js streams with `it-pipe` and friends.
 ## Example - Convert readable stream to source iterable
 
 ```TypeScript
+import fs from 'node:fs'
+import * as toIterable from 'stream-to-it'
+
 const readable = fs.createReadStream('/path/to/file')
 // Node.js streams are already async iterable so this is just s => s
-const source = toIterable.source(readable)
+const source = toIterable.source<Buffer>(readable)
 
 for await (const chunk of source) {
   console.log(chunk.toString())
@@ -39,7 +42,13 @@ for await (const chunk of source) {
 Also works with browser [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream):
 
 ```TypeScript
-const res = fetch('http://example.org/file.jpg')
+import * as toIterable from 'stream-to-it'
+
+const res = await fetch('http://example.org/file.jpg')
+
+if (res.body == null) {
+  throw new Error('Body was not set')
+}
 
 for await (const chunk of toIterable.source(res.body)) {
   console.log(chunk.toString())
@@ -49,7 +58,9 @@ for await (const chunk of toIterable.source(res.body)) {
 ## Example - Convert writable stream to sink iterable
 
 ```TypeScript
+import fs from 'node:fs'
 import { pipe } from 'it-pipe'
+import * as toIterable from 'stream-to-it'
 
 const source = [Buffer.from('Hello '), Buffer.from('World!')]
 const sink = toIterable.sink(fs.createWriteStream('/path/to/file'))
@@ -60,7 +71,10 @@ await pipe(source, sink)
 ## Example - Convert transform stream to transform iterable
 
 ```TypeScript
-const { Transform } = require('stream')
+import fs from 'node:fs'
+import { Transform } from 'node:stream'
+import { pipe } from 'it-pipe'
+import * as toIterable from 'stream-to-it'
 
 const output = await pipe(
   [true, false, true, true],
@@ -70,9 +84,9 @@ const output = await pipe(
     }
   })),
   // Collect and return the chunks
-  source => {
+  async source => {
     const chunks = []
-    for await (chunk of source) chunks.push(chunk)
+    for await (const chunk of source) chunks.push(chunk)
     return chunks
   }
 )
