@@ -2,49 +2,156 @@
   "name": "stream-to-it",
   "version": "0.2.4",
   "description": "Convert Node.js streams to streaming iterables",
-  "main": "index.js",
-  "files": [
-    "duplex.js",
-    "sink.js",
-    "source.js",
-    "transform.js"
-  ],
-  "scripts": {
-    "test": "ava test/*.test.js --verbose",
-    "lint": "standard",
-    "coverage": "nyc --reporter=text --reporter=lcov npm test"
-  },
-  "keywords": [
-    "stream",
-    "readablestream",
-    "iterable",
-    "iterator",
-    "async"
-  ],
   "author": "Alan Shaw",
-  "license": "MIT",
-  "dependencies": {
-    "get-iterator": "^1.0.2"
-  },
-  "devDependencies": {
-    "ava": "^3.10.1",
-    "bl": "^5.0.0",
-    "delay": "^5.0.0",
-    "it-pipe": "^1.1.0",
-    "nyc": "^15.1.0",
-    "p-fifo": "^1.0.0",
-    "standard": "^16.0.3",
-    "streaming-iterables": "^6.0.0"
-  },
-  "directories": {
-    "test": "test"
-  },
+  "license": "Apache-2.0 OR MIT",
+  "homepage": "https://github.com///github.com/alanshaw/stream-to-it#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alanshaw/stream-to-it.git"
+    "url": "git+https://github.com///github.com/alanshaw/stream-to-it.git"
   },
   "bugs": {
-    "url": "https://github.com/alanshaw/stream-to-it/issues"
+    "url": "https://github.com///github.com/alanshaw/stream-to-it/issues"
   },
-  "homepage": "https://github.com/alanshaw/stream-to-it#readme"
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "keywords": [
+    "async",
+    "iterable",
+    "iterator",
+    "readablestream",
+    "stream"
+  ],
+  "type": "module",
+  "types": "./dist/src/index.d.ts",
+  "files": [
+    "src",
+    "dist",
+    "!dist/test",
+    "!**/*.tsbuildinfo"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "eslintConfig": {
+    "extends": "ipfs",
+    "parserOptions": {
+      "project": true,
+      "sourceType": "module"
+    }
+  },
+  "release": {
+    "branches": [
+      "master"
+    ],
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits",
+          "releaseRules": [
+            {
+              "breaking": true,
+              "release": "major"
+            },
+            {
+              "revert": true,
+              "release": "patch"
+            },
+            {
+              "type": "feat",
+              "release": "minor"
+            },
+            {
+              "type": "fix",
+              "release": "patch"
+            },
+            {
+              "type": "docs",
+              "release": "patch"
+            },
+            {
+              "type": "test",
+              "release": "patch"
+            },
+            {
+              "type": "deps",
+              "release": "patch"
+            },
+            {
+              "scope": "no-release",
+              "release": false
+            }
+          ]
+        }
+      ],
+      [
+        "@semantic-release/release-notes-generator",
+        {
+          "preset": "conventionalcommits",
+          "presetConfig": {
+            "types": [
+              {
+                "type": "feat",
+                "section": "Features"
+              },
+              {
+                "type": "fix",
+                "section": "Bug Fixes"
+              },
+              {
+                "type": "chore",
+                "section": "Trivial Changes"
+              },
+              {
+                "type": "docs",
+                "section": "Documentation"
+              },
+              {
+                "type": "deps",
+                "section": "Dependencies"
+              },
+              {
+                "type": "test",
+                "section": "Tests"
+              }
+            ]
+          }
+        }
+      ],
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/github",
+      "@semantic-release/git"
+    ]
+  },
+  "scripts": {
+    "clean": "aegir clean",
+    "lint": "aegir lint",
+    "docs": "aegir docs",
+    "dep-check": "aegir dep-check",
+    "doc-check": "aegir doc-check",
+    "build": "aegir build",
+    "test": "aegir test -t node -t electron-main",
+    "test:node": "aegir test -t node --cov",
+    "test:electron-main": "aegir test -t electron-main",
+    "release": "aegir release"
+  },
+  "dependencies": {
+    "it-stream-types": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/p-fifo": "^1.0.2",
+    "aegir": "^42.2.4",
+    "bl": "^6.0.11",
+    "delay": "^6.0.0",
+    "it-all": "^3.0.4",
+    "it-pipe": "^3.0.1",
+    "p-fifo": "^1.0.0"
+  },
+  "sideEffects": false
 }

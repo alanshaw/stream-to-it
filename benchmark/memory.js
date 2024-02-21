@@ -12,7 +12,7 @@
 const fs = require('fs')
 const os = require('os')
 const toIterable = require('../')
-const pipe = require('it-pipe')
+import { pipe } from 'it-pipe'
 
 async function * run () {
   for (let i = 0; i < 170000; i++) {
