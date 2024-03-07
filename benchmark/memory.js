@@ -9,10 +9,10 @@
  * 2. From project root: `clinic doctor -- node ./benchmark/memory.js`
  */
 
-const fs = require('fs')
-const os = require('os')
-const toIterable = require('../')
-const pipe = require('it-pipe')
+import fs from 'node:fs'
+import os from 'node:os'
+import { pipe } from 'it-pipe'
+import { sink } from '../dist/src/index.js'
 
 async function * run () {
   for (let i = 0; i < 170000; i++) {
@@ -21,7 +21,7 @@ async function * run () {
 }
 
 (async () => {
-  const sink = toIterable.sink(fs.createWriteStream(`${os.tmpdir()}/memcheck.txt`))
-  await pipe(run(), sink)
+  const s = sink(fs.createWriteStream(`${os.tmpdir()}/memcheck.txt`))
+  await pipe(run(), s)
   process.exit(1)
 })()

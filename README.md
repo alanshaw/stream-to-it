@@ -1,29 +1,38 @@
 # stream-to-it
 
-[![Build Status](https://travis-ci.org/alanshaw/stream-to-it.svg?branch=master)](https://travis-ci.org/alanshaw/stream-to-it)
-[![dependencies Status](https://status.david-dm.org/gh/alanshaw/stream-to-it.svg)](https://david-dm.org/alanshaw/stream-to-it)
-[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![codecov](https://img.shields.io/codecov/c/github/alanshaw/stream-to-it.svg?style=flat-square)](https://codecov.io/gh/alanshaw/stream-to-it)
+[![CI](https://img.shields.io/github/actions/workflow/status/alanshaw/stream-to-it/js-test-and-release.yml?branch=master\&style=flat-square)](https://github.com/alanshaw/stream-to-it/actions/workflows/js-test-and-release.yml?query=branch%3Amaster)
 
 > Convert Node.js streams to streaming iterables
 
-## Install
+# About
 
-```sh
-npm i stream-to-it
-```
+<!--
 
-## Usage
+!IMPORTANT!
 
-```js
-const toIterable = require('stream-to-it')
-```
+Everything in this README between "# About" and "# Install" is automatically
+generated and will be overwritten the next time the doc generator is run.
 
-### Convert readable stream to source iterable
+To make changes to this section, please update the @packageDocumentation section
+of src/index.js or src/index.ts
 
-```js
+To experiment with formatting, please run "npm run docs" from the root of this
+repo and examine the changes made.
+
+-->
+
+Seamlessly use Node.js streams with `it-pipe` and friends.
+
+## Example - Convert readable stream to source iterable
+
+```TypeScript
+import fs from 'node:fs'
+import * as toIterable from 'stream-to-it'
+
 const readable = fs.createReadStream('/path/to/file')
 // Node.js streams are already async iterable so this is just s => s
-const source = toIterable.source(readable)
+const source = toIterable.source<Buffer>(readable)
 
 for await (const chunk of source) {
   console.log(chunk.toString())
@@ -32,18 +41,26 @@ for await (const chunk of source) {
 
 Also works with browser [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream):
 
-```js
-const res = fetch('http://example.org/file.jpg')
+```TypeScript
+import * as toIterable from 'stream-to-it'
+
+const res = await fetch('http://example.org/file.jpg')
+
+if (res.body == null) {
+  throw new Error('Body was not set')
+}
 
 for await (const chunk of toIterable.source(res.body)) {
   console.log(chunk.toString())
 }
 ```
 
-### Convert writable stream to sink iterable
+## Example - Convert writable stream to sink iterable
 
-```js
-const pipe = require('it-pipe')
+```TypeScript
+import fs from 'node:fs'
+import { pipe } from 'it-pipe'
+import * as toIterable from 'stream-to-it'
 
 const source = [Buffer.from('Hello '), Buffer.from('World!')]
 const sink = toIterable.sink(fs.createWriteStream('/path/to/file'))
@@ -51,10 +68,13 @@ const sink = toIterable.sink(fs.createWriteStream('/path/to/file'))
 await pipe(source, sink)
 ```
 
-### Convert transform stream to transform iterable
+## Example - Convert transform stream to transform iterable
 
-```js
-const { Transform } = require('stream')
+```TypeScript
+import fs from 'node:fs'
+import { Transform } from 'node:stream'
+import { pipe } from 'it-pipe'
+import * as toIterable from 'stream-to-it'
 
 const output = await pipe(
   [true, false, true, true],
@@ -64,9 +84,9 @@ const output = await pipe(
     }
   })),
   // Collect and return the chunks
-  source => {
+  async source => {
     const chunks = []
-    for await (chunk of source) chunks.push(chunk)
+    for await (const chunk of source) chunks.push(chunk)
     return chunks
   }
 )
@@ -74,37 +94,28 @@ const output = await pipe(
 console.log(output) // [ false, true, false, false ]
 ```
 
-## API
-
-```js
-const toIterable = require('stream-to-it')
-```
-
-### `toIterable.source(readable): Function`
-
-Convert a [`Readable`](https://nodejs.org/dist/latest/docs/api/stream.html#stream_readable_streams) stream or a browser [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) to a [source](https://gist.github.com/alanshaw/591dc7dd54e4f99338a347ef568d6ee9#source-it) iterable.
-
-### `toIterable.sink(writable): Function`
-
-Convert a [`Writable`](https://nodejs.org/dist/latest/docs/api/stream.html#stream_writable_streams) stream to a [sink](https://gist.github.com/alanshaw/591dc7dd54e4f99338a347ef568d6ee9#sink-it) iterable.
-
-### `toIterable.transform(transform): Function`
-
-Convert a [`Transform`](https://nodejs.org/dist/latest/docs/api/stream.html#stream_duplex_and_transform_streams) stream to a [transform](https://gist.github.com/alanshaw/591dc7dd54e4f99338a347ef568d6ee9#transform-it) iterable.
-
-### `toIterable.duplex(duplex): { sink: Function, source: Function }`
-
-Convert a [`Duplex`](https://nodejs.org/dist/latest/docs/api/stream.html#stream_duplex_and_transform_streams) stream to a [duplex](https://gist.github.com/alanshaw/591dc7dd54e4f99338a347ef568d6ee9#duplex-it) iterable.
-
 ## Related
 
-* [`it-to-stream`](https://www.npmjs.com/package/it-to-stream) Convert streaming iterables to Node.js streams
-* [`it-pipe`](https://www.npmjs.com/package/it-pipe) Utility to "pipe" async iterables together
+- [`it-to-stream`](https://www.npmjs.com/package/it-to-stream) Convert streaming iterables to Node.js streams
+- [`it-pipe`](https://www.npmjs.com/package/it-pipe) Utility to "pipe" async iterables together
 
-## Contribute
+# Install
 
-Feel free to dive in! [Open an issue](https://github.com/alanshaw/stream-to-it/issues/new) or submit PRs.
+```console
+$ npm i stream-to-it
+```
 
-## License
+# API Docs
 
-[MIT](LICENSE) © Alan Shaw
+- <https://github.com.github.io/alanshaw>
+
+# License
+
+Licensed under either of
+
+- Apache 2.0, ([LICENSE-APACHE](LICENSE-APACHE) / <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT ([LICENSE-MIT](LICENSE-MIT) / <http://opensource.org/licenses/MIT>)
+
+# Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
