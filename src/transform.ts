@@ -3,7 +3,7 @@ import type { Source, Transform } from 'it-stream-types'
 import type { Duplex } from 'node:stream'
 
 /**
- * Convert a [`Transform`](https://nodejs.org/dist/latest/docs/api/stream.html#stream_duplex_and_transform_streams)
+ * Convert a [`Transform`](https://nodejs.org/dist/latest/docs/api/stream.html#class-streamtransform)
  * stream to an [iterable transform](https://achingbrain.github.io/it-stream-types/interfaces/Transform.html).
  */
 export function transform <Input = unknown, Output = Input> (transform: Duplex): Transform<Source<Input>, AsyncGenerator<Output>> {

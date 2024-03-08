@@ -1,8 +1,8 @@
-import { expect } from 'aegir/chai'
 import { Transform } from 'node:stream'
+import { expect } from 'aegir/chai'
+import bl from 'bl'
 import all from 'it-all'
 import { pipe } from 'it-pipe'
-import bl from 'bl'
 import * as toIterable from '../src/index.js'
 import { randomInt, randomBytes } from './helpers/random.js'
 
@@ -81,7 +81,10 @@ describe('transform', () => {
         toIterable.transform(new Transform({
           transform (chunk, enc, cb) {
             i++
-            if (i > 2) return cb(new Error('boom'))
+            if (i > 2) {
+              cb(new Error('boom'))
+              return
+            }
             cb(null, chunk)
           }
         })),
@@ -92,7 +95,7 @@ describe('transform', () => {
   })
 
   it('should destroy transform stream and pass through errors from source', async () => {
-    async function * input () {
+    async function * input (): AsyncGenerator<string> {
       yield 'hello,'
       yield 'world,'
       throw new Error('test error')

@@ -1,11 +1,11 @@
-import { expect } from 'aegir/chai'
 import { Writable } from 'node:stream'
-import * as toIterable from '../src/index.js'
-import { pipe } from 'it-pipe'
-import { randomInt, randomBytes } from './helpers/random.js'
+import { expect } from 'aegir/chai'
 import delay from 'delay'
+import { pipe } from 'it-pipe'
+import * as toIterable from '../src/index.js'
+import { randomInt, randomBytes } from './helpers/random.js'
 
-const slowIterator = async function * (values: Uint8Array[]) {
+const slowIterator = async function * (values: Uint8Array[]): AsyncGenerator<Uint8Array> {
   for (const value of values) {
     await delay(1)
     yield value
@@ -42,7 +42,7 @@ describe('sink', () => {
       },
       next () {
         const value = input[i++]
-        return { done: !value, value }
+        return { done: value == null, value }
       },
       return () {
         returnCalled = true
@@ -207,7 +207,7 @@ describe('sink', () => {
       autoDestroy: false,
       write (chunk, enc, cb) {
         stream.emit('error', new Error('boom'))
-        setImmediate(() => cb())
+        setImmediate(() => { cb() })
       }
     })
 
@@ -233,7 +233,7 @@ describe('sink', () => {
       next: () => {
         return {
           value: input.pop(),
-          done: !input.length
+          done: input.length === 0
         }
       }
     }
@@ -242,7 +242,7 @@ describe('sink', () => {
       autoDestroy: false,
       write (chunk, enc, cb) {
         stream.emit('error', new Error('boom'))
-        setImmediate(() => cb())
+        setImmediate(() => { cb() })
       }
     })
 
@@ -268,7 +268,7 @@ describe('sink', () => {
       next: () => {
         return {
           value: input.pop(),
-          done: !input.length
+          done: input.length === 0
         }
       }
     }
@@ -277,7 +277,7 @@ describe('sink', () => {
       autoDestroy: false,
       highWaterMark: 0, // cause sink to wait for drain event
       write (chunk, enc, cb) {
-        setImmediate(() => cb(new Error('boom')))
+        setImmediate(() => { cb(new Error('boom')) })
       }
     })
 
