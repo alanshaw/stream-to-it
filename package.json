@@ -4,13 +4,13 @@
   "description": "Convert Node.js streams to streaming iterables",
   "author": "Alan Shaw",
   "license": "Apache-2.0 OR MIT",
-  "homepage": "https://github.com///github.com/alanshaw/stream-to-it#readme",
+  "homepage": "https://github.com/alanshaw/stream-to-it#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com///github.com/alanshaw/stream-to-it.git"
+    "url": "git+https://github.com/alanshaw/stream-to-it.git"
   },
   "bugs": {
-    "url": "https://github.com///github.com/alanshaw/stream-to-it/issues"
+    "url": "https://github.com/alanshaw/stream-to-it/issues"
   },
   "publishConfig": {
     "access": "public",
