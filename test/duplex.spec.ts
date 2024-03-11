@@ -1,7 +1,7 @@
-import { expect } from 'aegir/chai'
 import { Duplex } from 'node:stream'
-import { pipe } from 'it-pipe'
+import { expect } from 'aegir/chai'
 import all from 'it-all'
+import { pipe } from 'it-pipe'
 import Fifo from 'p-fifo'
 import * as toIterable from '../src/index.js'
 import { randomInt, randomBytes } from './helpers/random.js'
@@ -16,10 +16,10 @@ describe('duplex', () => {
       toIterable.duplex(new Duplex({
         objectMode: true,
         write (chunk, enc, cb) {
-          fifo.push(chunk).then(() => cb())
+          void fifo.push(chunk).then(() => { cb() })
         },
         final (cb) {
-          fifo.push(null).then(() => cb())
+          void fifo.push(null).then(() => { cb() })
         },
         async read (size) {
           while (true) {

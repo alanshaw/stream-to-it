@@ -1,11 +1,11 @@
 import type { Readable } from 'node:stream'
 
 /**
- * Convert a Node.js [`Readable`](https://nodejs.org/dist/latest/docs/api/stream.html#stream_readable_streams)
+ * Convert a Node.js [`Readable`](https://nodejs.org/dist/latest/docs/api/stream.html#class-streamreadable)
  * stream or a browser [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)
  * to an [iterable source](https://achingbrain.github.io/it-stream-types/types/Source.html).
  */
-export function source <T = unknown> (readable: Readable | ReadableStream<T>): AsyncGenerator<T> {
+export function source <T = Uint8Array> (readable: Readable | ReadableStream<T>): AsyncGenerator<T> {
   // Browser ReadableStream
   if (isReadableStream(readable)) {
     return (async function * () {

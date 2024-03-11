@@ -1,7 +1,7 @@
-import { expect } from 'aegir/chai'
 import { Readable } from 'node:stream'
-import * as toIterable from '../src/index.js'
+import { expect } from 'aegir/chai'
 import all from 'it-all'
+import * as toIterable from '../src/index.js'
 import { randomInt, randomBytes } from './helpers/random.js'
 
 describe('source', () => {
@@ -12,7 +12,7 @@ describe('source', () => {
       objectMode: true,
       read () {
         while (true) {
-          const data = input[i++] || null
+          const data = input[i++] ?? null
           if (!this.push(data)) break
         }
       }

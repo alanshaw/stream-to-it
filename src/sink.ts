@@ -2,15 +2,14 @@ import type { Sink, Source } from 'it-stream-types'
 import type { Writable } from 'node:stream'
 
 /**
- * Convert a Node.js [`Writable`](https://nodejs.org/dist/latest/docs/api/stream.html#stream_writable_streams)
+ * Convert a Node.js [`Writable`](https://nodejs.org/dist/latest/docs/api/stream.html#class-streamwritable)
  * stream to a [sink](https://achingbrain.github.io/it-stream-types/interfaces/Sink.html).
  */
 export function sink <T> (writable: Writable): Sink<Source<T>, Promise<void>> {
   return async (source: Source<T>): Promise<void> => {
-    const maybeEndSource = () => {
+    const maybeEndSource = async (): Promise<void> => {
       if (isAsyncGenerator(source)) {
-        // @ts-expect-error return method expects an argument
-        return source.return()
+        await source.return(undefined)
       }
     }
 
@@ -18,31 +17,40 @@ export function sink <T> (writable: Writable): Sink<Source<T>, Promise<void>> {
     let errCb: ((err: Error) => void) | undefined
     const errorHandler = (err: Error): void => {
       error = err
-      errCb?.(err)
+
       // When the writable errors, try to end the source to exit iteration early
       maybeEndSource()
+        .catch(err => {
+          err = new AggregateError([
+            error,
+            err
+          ], 'The Writable emitted an error, additionally an error occurred while ending the Source')
+        })
+        .finally(() => {
+          errCb?.(err)
+        })
     }
 
     let closeCb: (() => void) | undefined
     let closed = false
-    const closeHandler = () => {
+    const closeHandler = (): void => {
       closed = true
       closeCb?.()
     }
 
     let finishCb: (() => void) | undefined
     let finished = false
-    const finishHandler = () => {
+    const finishHandler = (): void => {
       finished = true
       finishCb?.()
     }
 
     let drainCb: (() => void) | undefined
-    const drainHandler = () => {
+    const drainHandler = (): void => {
       drainCb?.()
     }
 
-    const waitForDrainOrClose = () => {
+    const waitForDrainOrClose = async (): Promise<void> => {
       return new Promise<void>((resolve, reject) => {
         closeCb = drainCb = resolve
         errCb = reject
@@ -51,17 +59,22 @@ export function sink <T> (writable: Writable): Sink<Source<T>, Promise<void>> {
       })
     }
 
-    const waitForDone = () => {
+    const waitForDone = async (): Promise<void> => {
       // Immediately try to end the source
-      maybeEndSource()
+      await maybeEndSource()
+
       return new Promise<void>((resolve, reject) => {
-        if (closed || finished || error) return resolve()
+        if (closed || finished || (error != null)) {
+          resolve()
+          return
+        }
+
         finishCb = closeCb = resolve
         errCb = reject
       })
     }
 
-    const cleanup = () => {
+    const cleanup = (): void => {
       writable.removeListener('error', errorHandler)
       writable.removeListener('close', closeHandler)
       writable.removeListener('finish', finishHandler)
@@ -74,18 +87,18 @@ export function sink <T> (writable: Writable): Sink<Source<T>, Promise<void>> {
 
     try {
       for await (const value of source) {
-        if (!writable.writable || writable.destroyed || error) {
+        if (!writable.writable || writable.destroyed || (error != null)) {
           break
         }
 
-        if (writable.write(value as any) === false) {
+        if (!writable.write(value as any)) {
           await waitForDrainOrClose()
         }
       }
     } catch (err: any) {
       // error is set by stream error handler so only destroy stream if source
       // threw
-      if (!error) {
+      if (error == null) {
         writable.destroy(err)
       }
 
@@ -104,7 +117,7 @@ export function sink <T> (writable: Writable): Sink<Source<T>, Promise<void>> {
       await waitForDone()
 
       // Notify the user an error occurred
-      if (error) throw error
+      if (error != null) throw error
     } finally {
       // Clean up listeners
       cleanup()

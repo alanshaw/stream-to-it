@@ -9,6 +9,6 @@ export function randomInt (min: number, max: number): number {
   return Math.floor(Math.random() * (max - min)) + min
 }
 
-export function randomBytes (min: number, max: number) {
+export function randomBytes (min: number, max: number): Uint8Array {
   return Crypto.randomBytes(randomInt(min, max))
 }
