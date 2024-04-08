@@ -107,7 +107,7 @@ $ npm i stream-to-it
 
 # API Docs
 
-- <https://github.com.github.io/alanshaw>
+- <https://alanshaw.github.io/stream-to-it>
 
 # License
 
