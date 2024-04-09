@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/alanshaw/stream-to-it/compare/v1.0.0...v1.0.1) (2024-04-09)
+
+
+### Bug Fixes
+
+* link to API docs ([1b2cab5](https://github.com/alanshaw/stream-to-it/commit/1b2cab554a2853679c5a7ce3891f1c72e7ea4fd9))
+
 ## [1.0.0](https://github.com/alanshaw/stream-to-it/compare/v0.2.4...v1.0.0) (2024-04-08)
 
 
